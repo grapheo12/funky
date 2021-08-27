@@ -103,4 +103,5 @@ bot.on('interactionCreate', async interaction => {
 });
 
 
-bot.login(auth.token);
+bot.login(auth.token); 
+ 

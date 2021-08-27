@@ -2,6 +2,9 @@
   "name": "funky",
   "version": "1.0.0",
   "description": "A non-commercial discord bot for listening to music",
+  "engines": {
+    "node": "16.x"
+  },
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
