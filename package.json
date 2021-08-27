@@ -4,8 +4,7 @@
   "description": "A non-commercial discord bot for listening to music",
   "main": "bot.js",
   "scripts": {
-    "start": "node bot.js",
-    "postinstall": "node deploy-commands.js"
+    "start": "node bot.js"
   },
   "author": "Shubham Mishra",
   "license": "ISC",
