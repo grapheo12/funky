@@ -4,6 +4,15 @@
 
 A Discord bot for music.
 
+## Commands
+
+- `/wakeup`: Wakes up the bot which adds itself to your current voice channel
+- `/sleep`: Opposite of wakeup
+- `/play <song_title>`: Searches the song on youtube, then streams it to the voice channel it is added to
+- `/pause`: Pauses the current song
+- `/resume`: Resume the paused song
+- `/stop`: Stops the current song
+
 ## Setup
 
 Currently the app is not available publicly.
