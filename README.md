@@ -51,4 +51,4 @@ https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git
 jontewks/puppeteer
 ```
 
-Logo taken from [clipart-library](clipart-library.com)
+Logo taken from [clipart-library](https://clipart-library.com)
