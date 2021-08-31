@@ -1,28 +1,27 @@
-const puppeteer = require('puppeteer');
+const axios = require('axios');
 const ytdl = require('ytdl-core');
 const streams = require('stream');
 const fs = require('fs');
 const { createAudioResource, StreamType } = require('@discordjs/voice');
 
+var expression = /\/watch\?v=(\w+)/gi;
+var rgx = new RegExp(expression);
 
 async function getLink(query){
-    const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox']
-    });
-    const page = await browser.newPage();
+    const resp = await axios.get(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
 
-    await page.goto(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
+    let arr = [];
+    while ((result = rgx.exec(resp.data))){
+        arr.push(result);
+    }
 
-    let arr = await page.$$('a');
+    // console.log(arr);
 
     for (let i = 0; i < arr.length; i++){
-        let linker = await arr[i].getProperty("href");
-        let link = await linker.jsonValue();
-
-        if (link.startsWith("https://www.youtube.com/watch?v=")){
-            return link;
-        }
+        console.log(arr[i]);
+        let link = `https://www.youtube.com/watch?v=${arr[i][1]}`;
+        return link;
+        
     }
 
     return undefined;

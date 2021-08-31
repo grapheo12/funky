@@ -16,6 +16,7 @@
     "@discordjs/opus": "^0.5.3",
     "@discordjs/rest": "^0.1.0-canary.0",
     "@discordjs/voice": "^0.6.0",
+    "axios": "^0.21.1",
     "discord-api-types": "^0.22.0",
     "discord.io": "^2.5.3",
     "discord.js": "^13.1.0",
