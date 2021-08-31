@@ -36,8 +36,9 @@ module.exports = async (query, interaction) => {
     if (link){
         await interaction.followUp(`Playing: ${link}`);
         ytdl(link, {
-            quality: "highestaudio",
-            filter: format => format.container === "webm"
+            quality: 'highestaudio',
+            filter: format => format.container === "webm",
+            highWaterMark: 1024 * 1024 * 10
         }).pipe(ps);
 
         // ps.pipe(fs.createWriteStream("./test2.webm"))
