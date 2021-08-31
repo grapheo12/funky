@@ -18,7 +18,7 @@ async function getLink(query){
     // console.log(arr);
 
     for (let i = 0; i < arr.length; i++){
-        console.log(arr[i]);
+        // console.log(arr[i]);
         let link = `https://www.youtube.com/watch?v=${arr[i][1]}`;
         return link;
         
@@ -28,12 +28,11 @@ async function getLink(query){
  
 }
 
-module.exports = async (query, interaction) => {
+async function playSound(link){
     var ps = new streams.PassThrough();
 
-    let link = await getLink(query);
     if (link){
-        await interaction.followUp(`Playing: ${link}`);
+        // await interaction.followUp(`Playing: ${link}`);
         ytdl(link, {
             quality: 'highestaudio',
             filter: format => format.container === "webm",
@@ -51,4 +50,9 @@ module.exports = async (query, interaction) => {
     }
 
     return undefined;
+}
+
+module.exports = {
+    "getLink": getLink,
+    "playSound": playSound
 }
