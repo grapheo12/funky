@@ -4,7 +4,7 @@ const streams = require('stream');
 const fs = require('fs');
 const { createAudioResource, StreamType } = require('@discordjs/voice');
 
-var expression = /\/watch\?v=(\w+)/gi;
+var expression = /\/watch\?v=([a-zA-Z0-9()[\]+\-*\/%]{11})/gi;
 var rgx = new RegExp(expression);
 
 async function getLink(query){
