@@ -48,7 +48,7 @@ async function playNext(){
     while (link === null){
         if (idx === queue.length){
             await(new Promise((resolve) => {
-                setTimeout(()=>{}, 100);
+                setTimeout(resolve, 100);
             }));
         }else{
             link = queue[idx];
