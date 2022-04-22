@@ -48,7 +48,7 @@ async function playNext(){
     while (link === null){
         if (idx === queue.length){
             await(new Promise((resolve) => {
-                setTimeout(()=>{}, 100);
+                setTimeout(resolve, 100);
             }));
         }else{
             link = queue[idx];
@@ -63,17 +63,21 @@ bot.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const { commandName } = interaction;
+    let wakeup = false;
 
     logger.info(interaction);
 
-    if (commandName === "wakeup") {
-        await interaction.reply("Yo!");
+    if (commandName === "wakeup" || !wakeup) {
+        if(commandName === "wakeup"){
+            await interaction.reply("Yo!");
+        }
         const gld = bot.guilds.cache.get(auth.guildId);
         const member = gld.members.cache.get(interaction.user.id);
         var channel = member.voice.channel;
 
         queue = [];
         queries = [];
+        wakeup = true;
         firstPlay = true;
 
         if (channel) {
@@ -96,7 +100,9 @@ bot.on('interactionCreate', async interaction => {
         } else {
             await interaction.followUp("Join a voice channel please.");
         }
-    } else if (commandName === "play") {
+    } 
+    
+    if (commandName === "play") {
         const title = interaction.options.getString("search_title");
         await interaction.reply(`Searching for: ${title}`);
         
