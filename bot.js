@@ -68,7 +68,9 @@ bot.on('interactionCreate', async interaction => {
     logger.info(interaction);
 
     if (commandName === "wakeup" || !wakeup) {
-        await interaction.reply("Yo!");
+        if(commandName === "wakeup"){
+            await interaction.reply("Yo!");
+        }
         const gld = bot.guilds.cache.get(auth.guildId);
         const member = gld.members.cache.get(interaction.user.id);
         var channel = member.voice.channel;
