@@ -8,6 +8,7 @@ var auth = require('./config.json');
 var queue = [];
 var queries = [];
 var firstPlay = true;
+let wakeup = false;
 var idx = -1;
 
 logger.remove(logger.transports.Console);
@@ -59,50 +60,56 @@ async function playNext(){
     player.play(rsc);
 }
 
+async function initBot(interaction){
+    const gld = bot.guilds.cache.get(auth.guildId);
+    const member = gld.members.cache.get(interaction.user.id);
+    var channel = member.voice.channel;
+
+    queue = [];
+    queries = [];
+    firstPlay = true;
+
+    if (channel) {
+        connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator
+        });
+        player = createAudioPlayer({
+            behaviors: {
+                noSubscriber: NoSubscriberBehavior.Pause
+            }
+        });
+        
+        player.on(AudioPlayerStatus.Idle, async () => {
+            await playNext();
+        });
+        
+        connection.subscribe(player);
+    } else {
+        await interaction.followUp("Join a voice channel please.");
+    }
+}
+
 bot.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const { commandName } = interaction;
-    let wakeup = false;
 
     logger.info(interaction);
 
-    if (commandName === "wakeup" || !wakeup) {
-        if(commandName === "wakeup"){
-            await interaction.reply("Yo!");
-        }
-        const gld = bot.guilds.cache.get(auth.guildId);
-        const member = gld.members.cache.get(interaction.user.id);
-        var channel = member.voice.channel;
-
-        queue = [];
-        queries = [];
+    if (commandName === "wakeup") {
+        await interaction.reply("Yo!");
+        await initBot(interaction);
         wakeup = true;
-        firstPlay = true;
-
-        if (channel) {
-            connection = joinVoiceChannel({
-                channelId: channel.id,
-                guildId: channel.guild.id,
-                adapterCreator: channel.guild.voiceAdapterCreator
-            });
-            player = createAudioPlayer({
-                behaviors: {
-                    noSubscriber: NoSubscriberBehavior.Pause
-                }
-            });
-            
-            player.on(AudioPlayerStatus.Idle, async () => {
-                await playNext();
-            });
-            
-            connection.subscribe(player);
-        } else {
-            await interaction.followUp("Join a voice channel please.");
-        }
     } 
-    
-    if (commandName === "play") {
+    else if (commandName === "play") {
+        logger.info(wakeup);
+        logger.info(firstPlay);
+        if(!wakeup){
+            await initBot(interaction);
+            wakeup = true;
+        }
         const title = interaction.options.getString("search_title");
         await interaction.reply(`Searching for: ${title}`);
         

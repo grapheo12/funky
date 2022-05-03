@@ -26,6 +26,6 @@
     "puppeteer": "^10.2.0",
     "winston": "^3.3.3",
     "youtube-mp3-downloader": "^0.7.7",
-    "ytdl-core": "^4.9.1"
+    "ytdl-core": "^4.11.0"
   }
 }
