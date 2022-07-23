@@ -1,5 +1,5 @@
 # Credentials
-config.json
+src/config.json
 # Logs
 logs
 *.log
