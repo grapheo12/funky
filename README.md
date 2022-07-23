@@ -43,6 +43,6 @@ Create a file called `config.json` with the following contents:
 }
 ```
 
-`ffmpeg` is requied for this to run.
+`ffmpeg` is required for this to run.
 
 Logo taken from [clipart-library](https://clipart-library.com)
