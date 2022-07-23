@@ -97,7 +97,7 @@ async function initBot(interaction) {
             player: player,
         })
     } else {
-        await interaction.followUp("Join a voice channel please.");
+        await interaction.reply("Join a voice channel please.");
     }
 }
 
