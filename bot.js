@@ -1,21 +1,15 @@
-var { Client, Intents, Options } = require('discord.js');
-var { joinVoiceChannel, createAudioPlayer, createAudioResource, NoSubscriberBehavior, AudioPlayerStatus } = require('@discordjs/voice');
-var { getLink, playSound } = require('./scrape');
+const { Client, Intents } = require('discord.js');
+const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, AudioPlayerStatus } = require('@discordjs/voice');
+const { getLink, playSound } = require('./scrape');
+const { deployCommands } = require('./deploy-commands');
+const { remove, transports, add, info } = require('winston');
+const { token } = require('./config.json');
 
-var logger = require('winston');
-var auth = require('./config.json');
 
-var queue = [];
-var queries = [];
-var firstPlay = true;
-let wakeup = false;
-var idx = -1;
-
-logger.remove(logger.transports.Console);
-logger.add(new logger.transports.Console, {
+remove(transports.Console);
+add(new transports.Console, {
     colorize: true
 });
-logger.level = 'debug';
 
 var bot = new Client({
     intents: [
@@ -37,46 +31,51 @@ var bot = new Client({
     ]
 });
 
-bot.once('ready', (e) => {
-    logger.info("Connected");
+bot.once('ready', (_) => {
+    info("Connected");
 });
 
-var connection = null;
-var player = null;
+bot.on('guildCreate', (guild) => {
+    deployCommands(guild.id);
+});
 
-async function playNext(){
+let guildMap = new Map();
+
+
+async function playNext(map) {
     let link = null;
-    while (link === null){
-        if (idx === queue.length){
-            await(new Promise((resolve) => {
+    while (link === null) {
+        if (map.idx === map.queue.length) {
+            await (new Promise((resolve) => {
                 setTimeout(resolve, 100);
             }));
-        }else{
-            link = queue[idx];
-            idx++;
+        } else {
+            link = map.queue[map.idx];
+            map.idx++;
         }
     }
     let rsc = await playSound(link);
-    player.play(rsc);
+    map.player.play(rsc);
 }
 
-async function initBot(interaction){
-    if(!interaction.inGuild()) return;
+async function initBot(interaction) {
+    if (!interaction.inGuild()) return;
     const gld = bot.guilds.cache.get(interaction.guildId);
+    const guildId = interaction.guildId;
     const member = gld.members.cache.get(interaction.user.id);
     var channel = member.voice.channel;
 
-    queue = [];
-    queries = [];
-    firstPlay = true;
+    let queue = [];
+    let queries = [];
+    let firstPlay = true;
 
     if (channel) {
-        connection = joinVoiceChannel({
+        let connection = joinVoiceChannel({
             channelId: channel.id,
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator
         });
-        player = createAudioPlayer({
+        let player = createAudioPlayer({
             behaviors: {
                 noSubscriber: NoSubscriberBehavior.Pause
             }
@@ -87,6 +86,16 @@ async function initBot(interaction){
         });
 
         connection.subscribe(player);
+
+        guildMap.set(guildId, {
+            queue: queue,
+            queries: queries,
+            firstPlay: firstPlay,
+            wakeup: true,
+            idx: -1,
+            connection: connection,
+            player: player,
+        })
     } else {
         await interaction.followUp("Join a voice channel please.");
     }
@@ -96,74 +105,70 @@ bot.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const { commandName } = interaction;
-
-    logger.info(interaction);
+    let map = guildMap.get(interaction.guildId);
 
     if (commandName === "wakeup") {
         await interaction.reply("Yo!");
         await initBot(interaction);
-        wakeup = true;
     }
     else if (commandName === "play") {
-        logger.info(wakeup);
-        logger.info(firstPlay);
-        if(!wakeup){
+        if (!(map?.wakeup)) {
             await initBot(interaction);
-            wakeup = true;
         }
+        map = guildMap.get(interaction.guildId);
         const title = interaction.options.getString("search_title");
         await interaction.reply(`Searching for: ${title}`);
 
         let link = await getLink(title);
-        if (firstPlay){
-            firstPlay = false;
+        if (map.firstPlay) {
+            map.firstPlay = false;
             const rsc = await playSound(link);
-            player.play(rsc);
-            connection.subscribe(player);
-            queue.push(link);
-            idx = 1;
-        }else{
-            queue.push(link);
+            map.player.play(rsc);
+            map.connection.subscribe(map.player);
+            map.queue.push(link);
+            map.idx = 1;
+        } else {
+           map.queue.push(link);
         }
-        queries.push(title);
+        map.queries.push(title);
         interaction.followUp(`Enqueuing: ${link}`);
 
     } else if (commandName === "sleep") {
-        if (connection) {
-            connection.destroy();
+        if (map?.connection) {
+            map.connection.destroy();
+            map.connection = null;
         }
-        connection = null;
         await interaction.reply("Bye Bye!");
     } else if (commandName === "pause") {
-        if (player){
-            player.pause();
+        if (map?.player) {
+            map.player.pause();
         }
         await interaction.reply(":pause_button:");
     } else if (commandName === "resume") {
-        if (player){
-            player.unpause();
+        if (map?.player) {
+            map.player.unpause();
         }
         await interaction.reply(":play_pause:");
     } else if (commandName === "next") {
-        if (idx < queue.length){
-        await playNext();
-        interaction.reply("Going forward");
-        }else{
+        if (map.idx < map.queue.length) {
+            await playNext(map);
+            interaction.reply("Going forward");
+        } else {
             interaction.reply("End of queue");
         }
     } else if (commandName === "prev") {
-        if (idx > 1){
-            idx -= 2;
-            await playNext();
+        if (map.idx > 1) {
+            map.idx -= 2;
+            await playNext(map);
             interaction.reply("Going backward");
-        }else{
+        } else {
             interaction.reply("Beginning of playlist");
         }
     } else if (commandName === "queue") {
         let s = "```\n";
-        for (let i = 0; i < queries.length; i++){
-            s += queries[i] + " - " + queue[i];
-            if (idx == i + 1){
+        for (let i = 0; i < map.queries.length; i++) {
+            s += map.queries[i] + " - " + map.queue[i];
+            if (map.idx == i + 1) {
                 s += " <-- Current track";
             }
             s += "\n";
@@ -175,5 +180,5 @@ bot.on('interactionCreate', async interaction => {
 });
 
 
-bot.login(auth.token);
+bot.login(token);
 
