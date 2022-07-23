@@ -61,7 +61,8 @@ async function playNext(){
 }
 
 async function initBot(interaction){
-    const gld = bot.guilds.cache.get(auth.guildId);
+    if(!interaction.inGuild()) return;
+    const gld = bot.guilds.cache.get(interaction.guildId);
     const member = gld.members.cache.get(interaction.user.id);
     var channel = member.voice.channel;
 
@@ -80,11 +81,11 @@ async function initBot(interaction){
                 noSubscriber: NoSubscriberBehavior.Pause
             }
         });
-        
+
         player.on(AudioPlayerStatus.Idle, async () => {
             await playNext();
         });
-        
+
         connection.subscribe(player);
     } else {
         await interaction.followUp("Join a voice channel please.");
@@ -102,7 +103,7 @@ bot.on('interactionCreate', async interaction => {
         await interaction.reply("Yo!");
         await initBot(interaction);
         wakeup = true;
-    } 
+    }
     else if (commandName === "play") {
         logger.info(wakeup);
         logger.info(firstPlay);
@@ -112,7 +113,7 @@ bot.on('interactionCreate', async interaction => {
         }
         const title = interaction.options.getString("search_title");
         await interaction.reply(`Searching for: ${title}`);
-        
+
         let link = await getLink(title);
         if (firstPlay){
             firstPlay = false;
@@ -174,5 +175,5 @@ bot.on('interactionCreate', async interaction => {
 });
 
 
-bot.login(auth.token); 
- 
+bot.login(auth.token);
+
