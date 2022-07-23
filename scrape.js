@@ -21,11 +21,11 @@ async function getLink(query){
         // console.log(arr[i]);
         let link = `https://www.youtube.com/watch?v=${arr[i][1]}`;
         return link;
-        
+
     }
 
     return undefined;
- 
+
 }
 
 async function playSound(link){
@@ -42,7 +42,6 @@ async function playSound(link){
         // ps.pipe(fs.createWriteStream("./test2.webm"))
         rsc = createAudioResource(ps, {
             inputType: StreamType.WebmOpus,
-            inlineVolume: true
         });
 
         // rsc = createAudioResource("./test.mp3");

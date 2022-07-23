@@ -106,15 +106,14 @@ bot.on('interactionCreate', async interaction => {
 
     const { commandName } = interaction;
     let map = guildMap.get(interaction.guildId);
+    if (!(map?.wakeup)) {
+        await initBot(interaction);
+    }
 
     if (commandName === "wakeup") {
         await interaction.reply("Yo!");
-        await initBot(interaction);
     }
     else if (commandName === "play") {
-        if (!(map?.wakeup)) {
-            await initBot(interaction);
-        }
         map = guildMap.get(interaction.guildId);
         const title = interaction.options.getString("search_title");
         await interaction.reply(`Searching for: ${title}`);
@@ -128,7 +127,7 @@ bot.on('interactionCreate', async interaction => {
             map.queue.push(link);
             map.idx = 1;
         } else {
-           map.queue.push(link);
+            map.queue.push(link);
         }
         map.queries.push(title);
         interaction.followUp(`Enqueuing: ${link}`);
