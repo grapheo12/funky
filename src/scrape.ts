@@ -1,16 +1,17 @@
-const axios = require('axios');
-const ytdl = require('ytdl-core');
-const streams = require('stream');
-const fs = require('fs');
-const { createAudioResource, StreamType } = require('@discordjs/voice');
+import axios from 'axios';
+import ytdl from 'ytdl-core';
+import streams from 'stream';
+import { createAudioResource, StreamType } from '@discordjs/voice';
 
 var expression = /\/watch\?v=([a-zA-Z0-9()[\]+\-*\/%]{11})/gi;
 var rgx = new RegExp(expression);
 
-async function getLink(query){
+export async function getLink(query){
     const resp = await axios.get(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`);
 
-    let arr = [];
+    let arr: Array<Array<String>> = [];
+
+    let result: Array<String> | null;
     while ((result = rgx.exec(resp.data))){
         arr.push(result);
     }
@@ -21,14 +22,14 @@ async function getLink(query){
         // console.log(arr[i]);
         let link = `https://www.youtube.com/watch?v=${arr[i][1]}`;
         return link;
-        
+
     }
 
     return undefined;
- 
+
 }
 
-async function playSound(link){
+export function playSound(link){
     var ps = new streams.PassThrough();
 
     if (link){
@@ -40,9 +41,8 @@ async function playSound(link){
         }).pipe(ps);
 
         // ps.pipe(fs.createWriteStream("./test2.webm"))
-        rsc = createAudioResource(ps, {
+        let rsc = createAudioResource(ps, {
             inputType: StreamType.WebmOpus,
-            inlineVolume: true
         });
 
         // rsc = createAudioResource("./test.mp3");
@@ -50,9 +50,4 @@ async function playSound(link){
     }
 
     return undefined;
-}
-
-module.exports = {
-    "getLink": getLink,
-    "playSound": playSound
 }
